@@ -162,7 +162,8 @@ namespace ArtcastaWebApi.Controllers
             string sqlDataSource = _config.GetConnectionString("ArtcastaAppCon");
 
             // TODO: deleting all tables where CategoryId = @categoryId
-            // TODO: deleting RolesAccessCategories where CategoryId = @categoryId
+
+            _rolesService.DeleteAccessCategoriesByCategoryId(categoryId);
 
             string updateOrdQuery = "update dbo.Categories set Ord = Ord - 1 where Ord > (select Ord from dbo.Categories where CategoryId = @categoryId);";
             string deleteQuery = "delete from dbo.Categories where CategoryId = @categoryId;";
