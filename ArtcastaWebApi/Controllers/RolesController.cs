@@ -73,5 +73,30 @@ namespace ArtcastaWebApi.Controllers
             return new OkResult();
         }
 
+        [HttpDelete("{roleId}")]
+        public ActionResult Delete(int roleId)
+        {
+            if (roleId > 0)
+            {
+                if (_rolesService.IsUsersHasRoleId(roleId) > 0)
+                {
+                    return new ConflictResult();
+                }
+                try
+                {
+                    _rolesService.DeleteRole(roleId);
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                }
+            }
+            else
+            {
+                return new BadRequestResult();
+            }
+            return new OkResult();
+        }
+
     }
 }

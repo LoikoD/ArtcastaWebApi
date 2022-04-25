@@ -369,5 +369,87 @@ namespace ArtcastaWebApi.Services
             return roleIdList;
         }
 
+        private void DeleteRoleFromDb(int roleId)
+        {
+            string query = "delete from dbo.Roles where RoleId = @roleId;";
+            using (SqlConnection myConn = new SqlConnection(sqlDataSource))
+            {
+                myConn.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myConn))
+                {
+                    myCommand.Parameters.AddWithValue("@roleId", roleId);
+                    myCommand.ExecuteNonQuery();
+                }
+                myConn.Close();
+            }
+        }
+
+        private void DeleteAccessCategoriesByRoleId(int roleId)
+        {
+            string query = "delete from dbo.RolesAccessCategories where RoleId = @roleId;";
+            using (SqlConnection myConn = new SqlConnection(sqlDataSource))
+            {
+                myConn.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myConn))
+                {
+                    myCommand.Parameters.AddWithValue("@roleId", roleId);
+                    myCommand.ExecuteNonQuery();
+                }
+                myConn.Close();
+            }
+        }
+        public void DeleteAccessCategoriesByCategoryId(int categoryId)
+        {
+            string query = "delete from dbo.RolesAccessCategories where CategoryId = @categoryId;";
+            using (SqlConnection myConn = new SqlConnection(sqlDataSource))
+            {
+                myConn.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myConn))
+                {
+                    myCommand.Parameters.AddWithValue("@categoryId", categoryId);
+                    myCommand.ExecuteNonQuery();
+                }
+                myConn.Close();
+            }
+        }
+
+        private void DeleteAccessPointsByRoleId(int roleId)
+        {
+            string query = "delete from dbo.RolesAccessPoints where RoleId = @roleId;";
+            using (SqlConnection myConn = new SqlConnection(sqlDataSource))
+            {
+                myConn.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myConn))
+                {
+                    myCommand.Parameters.AddWithValue("@roleId", roleId);
+                    myCommand.ExecuteNonQuery();
+                }
+                myConn.Close();
+            }
+        }
+        public void DeleteRole(int roleId)
+        {
+            DeleteAccessCategoriesByRoleId(roleId);
+            DeleteAccessPointsByRoleId(roleId);
+
+            DeleteRoleFromDb(roleId);
+        }
+
+        public int IsUsersHasRoleId(int roleId)
+        {
+            string query = "select count(*) from dbo.Users where RoleId = @roleId;";
+            int count = 0;
+            using (SqlConnection myConn = new SqlConnection(sqlDataSource))
+            {
+                myConn.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myConn))
+                {
+                    myCommand.Parameters.AddWithValue("@roleId", roleId);
+                    count = (int)myCommand.ExecuteScalar();
+                }
+                myConn.Close();
+            }
+            return count;
+        }
     }
 }

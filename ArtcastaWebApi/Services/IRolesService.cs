@@ -12,5 +12,8 @@ namespace ArtcastaWebApi.Services
         void CreateRole(Role role);
         List<int> GetRoleIdsByAccessPointId(int accessPointId);
         void AddAccessCategoryToRole(AccessCategory accessCategory, int roleId);
+        void DeleteAccessCategoriesByCategoryId(int categoryId);
+        void DeleteRole(int roleId);
+        int IsUsersHasRoleId(int roleId);
     }
 }
