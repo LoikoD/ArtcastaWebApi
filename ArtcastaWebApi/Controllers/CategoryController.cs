@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.Data.SqlClient;
-using System.Data;
-using Newtonsoft.Json;
-using ArtcastaWebApi.Models;
-using Microsoft.AspNetCore.Authorization;
+﻿using ArtcastaWebApi.Models;
+using ArtcastaWebApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Data;
+using System.Data.SqlClient;
 
 namespace ArtcastaWebApi.Controllers
 {
@@ -15,10 +14,14 @@ namespace ArtcastaWebApi.Controllers
     public class CategoryController : ControllerBase
     {
         private readonly IConfiguration _config;
+        private readonly IAccessPointsService _accessPointsService;
+        private readonly IRolesService _rolesService;
 
-        public CategoryController(IConfiguration configuration)
+        public CategoryController(IConfiguration configuration, IAccessPointsService accessPointsService, IRolesService rolesService)
         {
             _config = configuration;
+            _accessPointsService = accessPointsService;
+            _rolesService = rolesService;
         }
 
         [HttpGet]
@@ -48,29 +51,52 @@ namespace ArtcastaWebApi.Controllers
         [HttpPost]
         public ActionResult Post(Category category)
         {
-            string query = "insert into dbo.Categories (CategoryName, Ord) values (@categoryName, (select (coalesce(max(Ord),0) + 1) from dbo.Categories));";
+            string query = "insert into dbo.Categories (CategoryName, Ord) output INSERTED.CategoryId values (@categoryName, (select (coalesce(max(Ord),0) + 1) from dbo.Categories));";
 
             string sqlDataSource = _config.GetConnectionString("ArtcastaAppCon");
-            int insertedRows = 0;
-            using (SqlConnection myConn = new SqlConnection(sqlDataSource))
-            {
-                myConn.Open();
-                using (SqlCommand myCommand = new SqlCommand(query, myConn))
-                {
-                    myCommand.Parameters.AddWithValue("@categoryName", category.CategoryName);
-                    insertedRows = myCommand.ExecuteNonQuery();
+            int categoryId = 0;
 
+            //try
+            //{
+
+                using (SqlConnection myConn = new SqlConnection(sqlDataSource))
+                {
+                    myConn.Open();
+                    using (SqlCommand myCommand = new SqlCommand(query, myConn))
+                    {
+                        myCommand.Parameters.AddWithValue("@categoryName", category.CategoryName);
+                        categoryId = (int)myCommand.ExecuteScalar();
+
+                    }
+                    myConn.Close();
                 }
-                myConn.Close();
-            }
-            if (insertedRows == 0)
-            {
-                return new BadRequestResult();
-            }
-            else
-            {
-                return new OkResult();
-            }
+                if (categoryId == 0)
+                {
+                    return new BadRequestResult();
+                }
+
+                // Добавление доступа к новой категории ролям, у которых есть доступ к модулю "Конфигурация"
+                int confAccessPointId = _accessPointsService.GetAccessPointIdByName("Конфигурация");
+                
+                List<int> rolesWithConfAccessIds = _rolesService.GetRoleIdsByAccessPointId(confAccessPointId);
+
+                AccessCategory accessCategory = new AccessCategory
+                {
+                    Id = categoryId,
+                    CanEdit = true
+                };
+                foreach (int roleId in rolesWithConfAccessIds)
+                {
+                    _rolesService.AddAccessCategoryToRole(accessCategory, roleId);
+                }
+            //}
+            //catch (Exception ex)
+            //{
+                
+            //    //return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            //}
+
+            return new OkResult();
         }
 
         [HttpPut]
@@ -135,7 +161,8 @@ namespace ArtcastaWebApi.Controllers
         {
             string sqlDataSource = _config.GetConnectionString("ArtcastaAppCon");
 
-            // TODO: deleteing all tables, that belongs to this category
+            // TODO: deleting all tables where CategoryId = @categoryId
+            // TODO: deleting RolesAccessCategories where CategoryId = @categoryId
 
             string updateOrdQuery = "update dbo.Categories set Ord = Ord - 1 where Ord > (select Ord from dbo.Categories where CategoryId = @categoryId);";
             string deleteQuery = "delete from dbo.Categories where CategoryId = @categoryId;";
