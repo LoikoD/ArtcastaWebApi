@@ -41,20 +41,5 @@ namespace ArtcastaWebApi.Services
             }
 
         }
-        public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
-        {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken securityToken;
-
-            var validationParameters = _tokenValidationParameters.Clone();
-            validationParameters.ValidateLifetime = false;
-
-            var principal = tokenHandler.ValidateToken(token, validationParameters, out securityToken);
-            //_tokenValidationParameters.ValidateLifetime = true;
-            var jwtSecurityToken = securityToken as JwtSecurityToken;
-            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Invalid token");
-            return principal;
-        }
     }
 }

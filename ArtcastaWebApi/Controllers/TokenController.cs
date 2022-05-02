@@ -31,11 +31,8 @@ namespace ArtcastaWebApi.Controllers
             string refreshToken = HttpContext.Request.Cookies["refresh_token"];
             string username = HttpContext.Request.Cookies["username"];
 
-            //var principal = _tokenService.GetPrincipalFromExpiredToken(accessToken);
-            //var username = principal.Identity.Name;
 
-            string query = "select top 1 UserId, Username, u.RoleId, r.RoleName, RefreshToken, RefreshTokenExpiryTime" +
-                    " from dbo.Users u inner join dbo.Roles r on r.RoleId = u.RoleId where Username = @username;";
+            string query = "select top 1 UserId, Username, RoleId, RefreshToken, RefreshTokenExpiryTime from dbo.Users where Username = @username;";
 
             string sqlDataSource = _config.GetConnectionString("ArtcastaAppCon");
             SqlDataReader myReader;
@@ -57,8 +54,7 @@ namespace ArtcastaWebApi.Controllers
                             {
                                 UserId = (int)myReader["UserId"],
                                 Username = myReader["Username"].ToString(),
-                                RoleId = (int)myReader["RoleId"],
-                                RoleName = myReader["RoleName"].ToString()
+                                RoleId = (int)myReader["RoleId"]
                             };
                             oldRefreshToken = myReader.GetString(myReader.GetOrdinal("RefreshToken"));
                             refreshTokenExpiryTime = myReader.GetDateTime(myReader.GetOrdinal("RefreshTokenExpiryTime"));
@@ -104,8 +100,7 @@ namespace ArtcastaWebApi.Controllers
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.RoleName)
+                new Claim(ClaimTypes.Name, user.Username)
             };
 
             var newAccessToken = _tokenService.GenerateAccessToken(claims);

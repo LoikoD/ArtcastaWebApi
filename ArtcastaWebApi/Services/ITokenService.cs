@@ -6,6 +6,5 @@ namespace ArtcastaWebApi.Services
     {
         string GenerateAccessToken(IEnumerable<Claim> claims);
         string GenerateRefreshToken();
-        ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
     }
 }

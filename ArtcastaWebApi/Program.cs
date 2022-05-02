@@ -85,6 +85,7 @@ builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<ITableService, TableService>();
 builder.Services.AddSingleton<IRolesService, RolesService>();
 builder.Services.AddSingleton<IAccessPointsService, AccessPointsService>();
+builder.Services.AddSingleton<IUserService, UserService>();
 
 var app = builder.Build();
 

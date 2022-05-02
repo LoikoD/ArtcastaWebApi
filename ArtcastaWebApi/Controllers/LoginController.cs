@@ -34,8 +34,7 @@ namespace ArtcastaWebApi.Controllers
                 return new BadRequestResult();
             }
 
-            string query = "select top 1 UserId, Username, Password, u.RoleId, r.RoleName" +
-                    " from dbo.Users u inner join dbo.Roles r on r.RoleId = u.RoleId where Username = @username;";
+            string query = "select top 1 UserId, Username, Password, RoleId from dbo.Users where Username = @username;";
 
             string sqlDataSource = _config.GetConnectionString("ArtcastaAppCon");
             SqlDataReader myReader;
@@ -56,8 +55,7 @@ namespace ArtcastaWebApi.Controllers
                             {
                                 UserId = (int)myReader["UserId"],
                                 Username = myReader["Username"].ToString(),
-                                RoleId = (int)myReader["RoleId"],
-                                RoleName = myReader["RoleName"].ToString()
+                                RoleId = (int)myReader["RoleId"]
                             };
                             hashedPassword = myReader["Password"].ToString();
                         }
@@ -103,8 +101,7 @@ namespace ArtcastaWebApi.Controllers
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.RoleName)
+                new Claim(ClaimTypes.Name, user.Username)
             };
 
             var accessToken = _tokenService.GenerateAccessToken(claims);
